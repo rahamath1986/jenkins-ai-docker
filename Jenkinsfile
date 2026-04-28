@@ -10,12 +10,15 @@ pipeline {
           args '--network ai-net -v $PWD:/app'
         }
       }
-      steps {
-        sh '''
-          echo "Build failed due to dependency issue" > build.log
-          python ai-agent/agent.py < build.log
-        '''
-      }
+      
+steps {
+  sh '''
+    pip install requests
+    echo "Build failed due to dependency issue" > build.log
+    python ai-agent/agent.py < build.log
+  '''
+}
+
     }
 
   }
