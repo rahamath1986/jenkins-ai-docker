@@ -1,15 +1,20 @@
 import sys
 import requests
 import json
+import os
+
+SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_URL")
 
 logs = sys.stdin.read()
 
 payload = {
-    "model": "phi",
+    "model": "phi",  # lightweight, stable
     "prompt": f"""
 You are a CI/CD AI agent.
-Analyze the following Jenkins build logs.
-Explain the root cause and suggest a fix.
+Summarize this Jenkins build failure.
+Return:
+1. Root cause
+2. Suggested fix (short)
 
 Logs:
 {logs}
@@ -17,34 +22,34 @@ Logs:
     "stream": False
 }
 
+# Step 1: Call Ollama
 try:
     r = requests.post(
         "http://ollama:11434/api/generate",
         json=payload,
         timeout=60
     )
-except Exception as e:
-    print(f"[AI ERROR] Failed to contact Ollama: {e}")
-    sys.exit(1)
-
-# Parse JSON safely
-try:
     data = r.json()
-except json.JSONDecodeError:
-    print("[AI ERROR] Ollama returned non‑JSON response")
-    print(r.text)
-    sys.exit(1)
+except Exception as e:
+    result = f"AI error: {e}"
+    data = {}
 
-# Handle different response formats
-if "response" in data:
-    print("\n=== AI ANALYSIS ===\n")
-    print(data["response"])
+# Step 2: Extract AI summary
+ai_summary = data.get("response", "AI could not generate summary.")
 
-elif "error" in data:
-    print("\n=== AI ERROR ===\n")
-    print(data["error"])
-    sys.exit(1)
+print("\n=== AI SUMMARY ===\n")
+print(ai_summary)
 
-else:
-    print("\n=== AI RAW RESPONSE (DEBUG) ===\n")
-    print(json.dumps(data, indent=2))
+# Step 3: Send to Slack
+if SLACK_WEBHOOK:
+    slack_payload = {
+        "text": (
+            "*🚨 Jenkins CI AI Summary*\n\n"
+            f"```{ai_summary}```"
+        )
+    }
+    try:
+        requests.post(SLACK_WEBHOOK, json=slack_payload, timeout=10)
+        print("\n✅ Slack notification sent")
+    except Exception as e:
+        print(f"\n⚠️ Slack failed: {e}")
