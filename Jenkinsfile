@@ -1,8 +1,11 @@
 pipeline {
   agent none
 
-  stages {
+  environment {
+    SLACK_WEBHOOK_URL = credentials('SLACK_WEBHOOK_URL')
+  }
 
+  stages {
     stage('AI Agent Test') {
       agent {
         docker {
@@ -10,16 +13,13 @@ pipeline {
           args '--network ai-net -v $PWD:/app'
         }
       }
-      
-steps {
-  sh '''
-    pip install requests
-    echo "Build failed due to dependency issue" > build.log
-    python ai-agent/agent.py < build.log
-  '''
-}
-
+      steps {
+        sh '''
+          pip install requests
+          echo "Build failed due to dependency conflict" > build.log
+          python ai-agent/agent.py < build.log
+        '''
+      }
     }
-
   }
 }
