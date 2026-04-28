@@ -49,5 +49,28 @@ pipeline {
         archiveArtifacts artifacts: 'android/build.log', fingerprint: true
       }
     }
+
+stage('AI Release Notes') {
+  agent {
+    docker {
+      image 'python:3.11'
+      args '--network ai-net'
+    }
+  }
+  steps {
+    sh '''
+      pip install requests
+
+      git log --pretty=format:"- %s" > release_commits.txt
+
+      AI_MODE=release_notes \
+      python ai-agent/agent.py < release_commits.txt > release_notes.txt
+
+      cat release_notes.txt
+    '''
+    archiveArtifacts artifacts: 'release_notes.txt', fingerprint: true
+  }
+}
+
   }
 }

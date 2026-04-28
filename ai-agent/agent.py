@@ -7,6 +7,7 @@ JOB_NAME = os.getenv("JOB_NAME", "unknown")
 BUILD_NUMBER = os.getenv("BUILD_NUMBER", "unknown")
 BUILD_URL = os.getenv("BUILD_URL", "")
 GIT_BRANCH = os.getenv("GIT_BRANCH", "unknown")
+MODE = os.getenv("AI_MODE", "failure")
 
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_URL")
 
@@ -43,6 +44,31 @@ Logs:
     "stream": False
 }
 
+
+if MODE == "release_notes":
+    payload = {
+        "model": "phi",
+        "prompt": f"""
+You are a CI/CD AI assistant.
+
+Generate professional Android release notes using this information.
+
+Jenkins Metadata:
+- Job: {JOB_NAME}
+- Build: #{BUILD_NUMBER}
+- Branch: {GIT_BRANCH}
+
+Git Changes:
+{logs}
+
+Rules:
+- Bullet points only
+- Clear and user‑friendly
+- No emojis
+- No internal technical jargon
+""",
+        "stream": False
+    }
 
 # Step 1: Call Ollama
 try:
