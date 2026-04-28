@@ -24,16 +24,13 @@ pipeline {
       steps {
         sh '''
           cd /workspace/android
-
           chmod +x gradlew
-
-          # Run Fastlane and capture REAL build logs
           fastlane android ci_build > build.log 2>&1 || true
         '''
       }
     }
 
-    stage('AI Failure Analysis') {
+    stage('AI Failure Analysis & Archive') {
       agent {
         docker {
           image 'python:3.11'
@@ -43,17 +40,10 @@ pipeline {
       steps {
         sh '''
           pip install requests
-
-          # Send REAL Fastlane / Gradle logs to AI
           python ai-agent/agent.py < /workspace/android/build.log
         '''
+        archiveArtifacts artifacts: 'android/build.log', fingerprint: true
       }
-    }
-  }
-
-  post {
-    always {
-      archiveArtifacts artifacts: 'android/build.log', fingerprint: true
     }
   }
 }
