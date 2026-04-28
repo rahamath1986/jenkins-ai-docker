@@ -6,20 +6,54 @@ pipeline {
   }
 
   stages {
-    stage('AI Agent Test') {
+
+    stage('Checkout') {
+      agent any
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Fastlane Android Build') {
+      agent {
+        docker {
+          image 'fastlane/fastlane:2.219.0'
+          args '--platform linux/amd64 -v $PWD:/workspace'
+        }
+      }
+      steps {
+        sh '''
+          cd /workspace/android
+
+          chmod +x gradlew
+
+          # Run Fastlane and capture REAL build logs
+          fastlane android ci_build > build.log 2>&1 || true
+        '''
+      }
+    }
+
+    stage('AI Failure Analysis') {
       agent {
         docker {
           image 'python:3.11'
-          args '--network ai-net -v $PWD:/app'
+          args '--network ai-net -v $PWD:/workspace'
         }
       }
       steps {
         sh '''
           pip install requests
-          echo "Build failed due to dependency conflict" > build.log
-          python ai-agent/agent.py < build.log
+
+          # Send REAL Fastlane / Gradle logs to AI
+          python ai-agent/agent.py < /workspace/android/build.log
         '''
       }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'android/build.log', fingerprint: true
     }
   }
 }
