@@ -17,7 +17,7 @@ pipeline {
     stage('Fastlane Android Build') {
       agent {
         docker {
-          image 'fastlane/fastlane:2.219.0'
+          image 'freeletics/fastlane:2.227.2'
           args '--platform linux/amd64 -v $PWD:/workspace'
         }
       }
