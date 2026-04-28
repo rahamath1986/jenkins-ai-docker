@@ -1,24 +1,22 @@
 pipeline {
-  agent any
-
-  environment {
-    DOCKER_NETWORK = "ai-net"
-  }
+  agent none
 
   stages {
+
     stage('AI Agent Test') {
+      agent {
+        docker {
+          image 'python:3.11'
+          args '--network ai-net -v $PWD:/app'
+        }
+      }
       steps {
         sh '''
           echo "Build failed due to dependency issue" > build.log
-
-          docker run --rm \
-            --network ${DOCKER_NETWORK} \
-            -v "$PWD:/app" \
-            -w /app \
-            python:3.11 \
-            python ai-agent/agent.py < build.log
+          python ai-agent/agent.py < build.log
         '''
       }
     }
+
   }
 }
