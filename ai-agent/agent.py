@@ -3,6 +3,11 @@ import requests
 import json
 import os
 
+JOB_NAME = os.getenv("JOB_NAME", "unknown")
+BUILD_NUMBER = os.getenv("BUILD_NUMBER", "unknown")
+BUILD_URL = os.getenv("BUILD_URL", "")
+GIT_BRANCH = os.getenv("GIT_BRANCH", "unknown")
+
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_URL")
 
 logs = sys.stdin.read()
@@ -11,10 +16,17 @@ payload = {
     "model": "phi",  # lightweight, stable
     "prompt": f"""
 You are a CI/CD AI agent.
+
+Jenkins Metadata:
+- Job: {JOB_NAME}
+- Build: #{BUILD_NUMBER}
+- Branch: {GIT_BRANCH}
+
 Summarize this Jenkins build failure.
 Return:
-1. Root cause
-2. Suggested fix (short)
+1. Exact error message
+2. Root cause
+3. Suggested fix (short)
 
 Logs:
 {logs}
