@@ -5,7 +5,7 @@ import json
 logs = sys.stdin.read()
 
 payload = {
-    "model": "mistral",
+    "model": "phi",
     "prompt": f"""
 You are a CI/CD AI agent.
 Analyze the following Jenkins build logs.
