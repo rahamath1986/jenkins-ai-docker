@@ -12,27 +12,37 @@ SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_URL")
 
 logs = sys.stdin.read()
 
+
 payload = {
-    "model": "phi",  # lightweight, stable
+    "model": "phi",  # stable, low‑memory model
     "prompt": f"""
-You are a CI/CD AI agent.
+You are an AI CI/CD failure analysis agent.
+
+Given Jenkins build logs, respond in EXACTLY this format:
+
+Exact error message:
+<copy the exact error from the logs>
+
+Root cause:
+<one clear sentence explaining why it happened>
+
+Suggested fix:
+<one short actionable fix>
+
+Do NOT add extra text.
+Do NOT add explanations outside these sections.
 
 Jenkins Metadata:
 - Job: {JOB_NAME}
 - Build: #{BUILD_NUMBER}
 - Branch: {GIT_BRANCH}
 
-Summarize this Jenkins build failure.
-Return:
-1. Exact error message
-2. Root cause
-3. Suggested fix (short)
-
 Logs:
 {logs}
 """,
     "stream": False
 }
+
 
 # Step 1: Call Ollama
 try:
